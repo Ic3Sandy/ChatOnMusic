@@ -34,9 +34,9 @@ app.get('/listUsers', (req, res) => {
 app.get('/showbyID/:id', (req, res) => {
 
     let data = require('./users.json');
-    let value = req.params.id;
+    let id = req.params.id;
     
-    let result = data[value];
+    let result = data[id];
 
     console.log(result);
     res.json(result);
@@ -50,10 +50,10 @@ app.post('/addUser', (req, res) => {
 
     result[user.id] = user;
 
-    // fs.writeFile('users.json', JSON.stringify(result, null, 4), (err) => {
-    //     if (err) throw err;
-    //     console.log('The file has been saved!');
-    // });
+    fs.writeFile('users.json', JSON.stringify(result, null, 4), (err) => {
+        if (err) throw err;
+        console.log('The file has been saved!');
+    });
 
     console.log(result);
     res.json(result);
@@ -70,14 +70,34 @@ app.post('/addMultiUser', (req, res) => {
         result[users[i]["id"]] = users[i];
 
     };
-    // result[user.id] = user;
 
-    // fs.writeFile('users.json', JSON.stringify(result, null, 4), (err) => {
-    //     if (err) throw err;
-    //     console.log('The file has been saved!');
-    // });
+    fs.writeFile('users.json', JSON.stringify(result, null, 4), (err) => {
+        if (err) throw err;
+        console.log('The file has been saved!');
+    });
 
-    // console.log(result);
+    console.log(result);
+    res.json(result);
+
+});
+
+app.delete('/deleteUser/:id', (req, res) => {
+
+    let data = require('./users.json');
+    let id = req.params.id;
+    let result = {};
+
+    for (let i in data) {
+        if (i !== id)
+            result[i] = data[i];
+    };
+
+    fs.writeFile('users.json', JSON.stringify(result, null, 4), (err) => {
+        if (err) throw err;
+        console.log('The file has been saved!');
+    });
+
+    console.log(result);
     res.json(result);
 
 });
