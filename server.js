@@ -64,11 +64,15 @@ app.post('/addMultiUser', (req, res) => {
 
     let users = req.body;
     let result = require('./users.json');
+    let id = 0;
+
+    for (let i in result) {
+        id++;
+    };
 
     for (let i in users) {
-        
-        result[users[i]["id"]] = users[i];
-
+        users[i]["id"] = ++id;
+        result[id] = users[i];
     };
 
     fs.writeFile('users.json', JSON.stringify(result, null, 4), (err) => {
