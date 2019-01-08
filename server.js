@@ -15,15 +15,27 @@ app.get('/', (req, res) => {
         "msg": "This is a GET."
     };
 
-    res.json(200).send(result);
+    res.json(result);
 
 });
 
 app.get('/listUsers', (req, res) => {
 
-    let json = require('./users.json');
+    let result = require('./users.json');
 
-    res.json(json);
+    res.json(result);
+
+});
+
+app.get('/showbyID/:id', (req, res) => {
+
+    let data = require('./users.json');
+    let value = req.params.id;
+    
+    let result = data[value];
+
+
+    res.json(result);
 
 });
 
