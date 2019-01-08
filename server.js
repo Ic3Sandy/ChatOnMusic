@@ -1,6 +1,7 @@
 'use strict';
 const express = require('express');
 const bodyParser = require('body-parser');
+const fs = require('fs');
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -27,6 +28,7 @@ app.get('/listUsers', (req, res) => {
 
 });
 
+
 app.get('/showbyID/:id', (req, res) => {
 
     let data = require('./users.json');
@@ -37,6 +39,28 @@ app.get('/showbyID/:id', (req, res) => {
 
     res.json(result);
 
+});
+
+app.post('/addUser', (req, res) => {
+
+    let user = req.body;
+    let result = require('./users.json');
+
+    result[user.id] = user;
+
+    // fs.writeFile('users.json', JSON.stringify(result, null, 4), (err) => {
+    //     if (err) throw err;
+    //     console.log('The file has been saved!');
+    // });
+
+    console.log(result);
+    res.json(result);
+
+});
+
+
+app.get('/*', function(req, res){
+    res.status(404).send({"message": "Doesn't have this path!!!"});
 });
 
 app.listen(port, () => {
