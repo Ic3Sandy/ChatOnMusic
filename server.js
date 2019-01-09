@@ -1,10 +1,10 @@
 'use strict';
 const express = require('express');
 const bodyParser = require('body-parser');
-const fs = require('fs');
+const db = require('./db');
 
 const app = express();
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || 5000;
 
 app.use(bodyParser.json());
 app.set('json spaces', 10);
@@ -21,94 +21,31 @@ app.get('/', (req, res) => {
 
 });
 
-app.get('/listUsers', (req, res) => {
+app.post('/receiveData', (req, res) => {
 
-    let result = require('./users.json');
+    // { channel: 1,
+    //     type: 103,
+    //     typeString: 'Temperature Sensor',
+    //     value: 27.5 }
+    // let temp = req.body.DevEUI_uplink.payload_parsed.frames[1];
+    let temp = req.body;
+    let data = {
+        'teamID': 11,
+        'temp': (temp.value).toString(),
+    }
 
-    console.log(result);
-    res.json(result);
-
-});
-
-
-app.get('/showbyID/:id', (req, res) => {
-
-    let data = require('./users.json');
-    let id = req.params.id;
-    
-    let result = data[id];
-
-    console.log(result);
-    res.json(result);
+    db.receiveData(data);
+    let status = {'status': 'success'};
+    res.json(status);
 
 });
 
-app.post('/addUser', (req, res) => {
+app.get('/showData', async (req, res) => {
 
-    let user = req.body;
-    let result = require('./users.json');
+    let data = await db.showData();
 
-    result[user.id] = user;
+    res.json(data);
 
-    fs.writeFile('users.json', JSON.stringify(result, null, 4), (err) => {
-        if (err) throw err;
-        console.log('The file has been saved!');
-    });
-
-    console.log(result);
-    res.json(result);
-
-});
-
-app.post('/addMultiUser', (req, res) => {
-
-    let users = req.body;
-    let result = require('./users.json');
-    let id = 0;
-
-    for (let i in result) {
-        id++;
-    };
-
-    for (let i in users) {
-        users[i]["id"] = ++id;
-        result[id] = users[i];
-    };
-
-    fs.writeFile('users.json', JSON.stringify(result, null, 4), (err) => {
-        if (err) throw err;
-        console.log('The file has been saved!');
-    });
-
-    console.log(result);
-    res.json(result);
-
-});
-
-app.delete('/deleteUser/:id', (req, res) => {
-
-    let data = require('./users.json');
-    let id = req.params.id;
-    let result = {};
-
-    for (let i in data) {
-        if (i !== id)
-            result[i] = data[i];
-    };
-
-    fs.writeFile('users.json', JSON.stringify(result, null, 4), (err) => {
-        if (err) throw err;
-        console.log('The file has been saved!');
-    });
-
-    console.log(result);
-    res.json(result);
-
-});
-
-
-app.get('/*', function(req, res){
-    res.status(404).send({"message": "Doesn't have this path!!!"});
 });
 
 app.listen(port, () => {
