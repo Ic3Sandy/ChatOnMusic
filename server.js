@@ -78,6 +78,18 @@ app.put('/editData/:teamID', (req, res) => {
 
 });
 
+app.delete('/deleteData/:teamID', (req, res) => {
+
+    let data = {
+        'teamID': req.params.teamID,
+    };
+    db.deleteData(data);
+
+    let status = {'status': 'success'};
+    res.json(status);
+
+});
+
 app.listen(port, () => {
     console.log(`Server start on port ${port}!`);
 });

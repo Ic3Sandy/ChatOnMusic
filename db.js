@@ -20,12 +20,8 @@ let receiveData = (data) => {
     let result = new Temp({ 'teamID': data.teamID, 'temp': data.temp });
 
     result.save((err, res) => {
-        if (err) 
-            return console.error(err);
-        else {
-            console.log(res);
-            // return {'status': 'success', 'data': res}
-        };
+        if (err) return console.error(err);
+        else console.log(res)
     });
 
 };
@@ -34,7 +30,7 @@ let showData = async () => {
 
     return Temp.find({}, (err, data) => {
         if (err) return console.error(err);
-        console.log(data);
+        else console.log(data);
         return data;
     });
 
@@ -43,14 +39,24 @@ let showData = async () => {
 let editData = (data) => {
 
     Temp.updateMany({'teamID': data.teamID}, {'temp': data.temp}, (err, res) => {
-        console.log(res);
+        if (err) return console.error(err);
+        else console.log(res);
     });
 
+};
+
+let deleteData = (data) => {
+
+    Temp.deleteMany({'teamID': data.teamID}, (err, res) => {
+        if (err) return console.error(err);
+        else console.log(res);
+    });
 };
 
 module.exports.receiveData = receiveData;
 module.exports.showData = showData;
 module.exports.editData =editData;
+module.exports.deleteData = deleteData;
 
 // let result = new Temp({ 'teamID': 11, 'temp': '23.6' });
 
