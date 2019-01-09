@@ -29,11 +29,11 @@ app.post('/receiveData', (req, res) => {
     //     value: 27.5 }
     console.log(req.body);
     let temp = req.body.DevEUI_uplink.payload_parsed.frames[0];
-    let DevEUI = (req.body.DevEUI_uplink.DevEUI).substring(14);
+    let DevEUI = req.body.DevEUI_uplink.payload_parsed.frames[1];
     // let DevEUI = 'AA00DBCA12EF1111';
     // let temp = req.body;
     let data = {
-        'teamID': DevEUI,
+        'teamID': DevEUI.value,
         'temp': (temp.value).toString(),
     }
     
