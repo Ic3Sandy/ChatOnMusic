@@ -30,7 +30,6 @@ let receiveData = (data) => {
 
 };
 
-
 let showData = async () => {
 
     return Temp.find({}, (err, data) => {
@@ -41,8 +40,17 @@ let showData = async () => {
 
 };
 
+let editData = (data) => {
+
+    Temp.updateMany({'teamID': data.teamID}, {'temp': data.temp}, (err, res) => {
+        console.log(res);
+    });
+
+};
+
 module.exports.receiveData = receiveData;
 module.exports.showData = showData;
+module.exports.editData =editData;
 
 // let result = new Temp({ 'teamID': 11, 'temp': '23.6' });
 

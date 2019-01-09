@@ -64,6 +64,20 @@ app.post('/addData', (req, res) => {
 
 });
 
+app.put('/editData/:teamID', (req, res) => {
+
+    let temp = req.body;
+    let data = {
+        'teamID': req.params.teamID,
+        'temp': temp.temp,
+    };
+    db.editData(data);
+
+    let status = {'status': 'success'};
+    res.json(status);
+
+});
+
 app.listen(port, () => {
     console.log(`Server start on port ${port}!`);
 });
