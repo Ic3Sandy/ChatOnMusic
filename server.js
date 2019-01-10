@@ -1,6 +1,9 @@
 'use strict';
 const express = require('express');
 const bodyParser = require('body-parser');
+const tf = require('@tensorflow/tfjs');
+require('@tensorflow/tfjs-node');
+
 const db = require('./db');
 const readCSV = require('./readCSV');
 
@@ -42,7 +45,7 @@ app.post('/receiveData', async (req, res) => {
     //     typeString: 'Temperature Sensor',
     //     value: 27.5 }
     let frames = req.body.DevEUI_uplink.payload_parsed.frames;
-    // console.log(frames);
+    console.log(frames);
 
     let temperature = null;
     let humidity = null;
@@ -201,9 +204,32 @@ app.get('/getSanam', async (req, res) => {
 
 app.get('/predict', async (req, res) => {
 
-    let msg = "This a predict from model";
+    let timeNow = (new Date().toISOString().replace(/T/, ' ').replace(/\..+/, ''));
+    let hoursNow = parseInt(timeNow.split(' ')[1].split(':')[0]) + 7;
 
-    res.json(msg);
+    if (('hours' in req.query)) {
+        hoursNow = parseInt(req.query.hours);
+    };
+
+    let model = await tf.loadModel('file://model/model.json');
+    let testXS = tf.tensor2d([[hoursNow]]);
+    let MAX = 1800
+
+    model.predict(testXS).data().then((predict) => {
+
+        let h1 = (parseInt(predict[0]*MAX)).toString();
+        let h2 = (parseInt(predict[1]*MAX)).toString();
+        let h3 = (parseInt(predict[2]*MAX)).toString();
+        // console.log(h1, h2, h3);
+
+        let result = {
+            "number_of_tourist": [h1, h2, h3]
+        };
+
+        tf.disposeVariables();
+        res.json(result);
+    });
+    
 
 });
 
@@ -215,7 +241,7 @@ app.listen(port, () => {
         let timeNow = (new Date().toISOString().replace(/T/, ' ').replace(/\..+/, ''));
         console.log('Schedule: ' + timeNow);
 
-        // 24.00 thai
+        // 00.00 thai
         if (timeNow.split(' ')[1] === '17:00:00') {
 
             let data = {
