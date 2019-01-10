@@ -2,10 +2,11 @@
 const bodyParser = require('body-parser') // parse json, so we can call node and object
 const request = require('request-promise')// networking to curl outside
 const express = require('express')// wrapper we can write node js shorter
-const db = require('./db');
+// const db = require('./db');
 const app = express()
 const port = process.env.PORT || 4000
 const hostname = '127.0.0.1'
+const SERVER = '127.0.0.1'
 const HEADERS = {
     'Content-Type': 'application/json',
     'Authorization': 'Bearer zXHPGzdB0d6u4y8MAN6sXB13KlZXKzcqpqhp4OQEGb4dIR9IfsEAM+5NvwfUfutebYS5TTM+d2pcS3qBa6OXq+nMp3W7XQDXZxuiywNXzM+dl4jj921oHS1JyagobQ/yEmZ8jdGpXVbx8oFi2uoNEAdB04t89/1O/w1cDnyilFU='
@@ -13,9 +14,6 @@ const HEADERS = {
 
 app.use(bodyParser.urlencoded({ extended: false }))//initiate body parser to get json
 app.use(bodyParser.json())
-
-let p_in = 0;
-let p_out = 0;
 
 // Push
 //get method
@@ -47,62 +45,68 @@ app.post('/webhook', async (req, res) => {
             case 'message': {
                 if (event.message.type === 'sticker') {
                     reply(reply_token, 'sticker')
-                } 
+                }
                 else if (event.message.text === 'Admin_Mon') {
                     //ขอข้อมูลจากเซิฟเวอร์เพื่อขอข้อมูล temp,humid ในปัจจุบันแล้วแสดงในไลน์
-                    let data = await db.lineMessaging();
-                    let info = data[data.length - 1];
-                    let msg = {
-                        'Temperature': info.temperature,
-                        'Humidity': info.temperature,
-                        'P in': info.p_in,
-                        'P out': info.p_out,
-                        'Timestamp': info.timestamp,
-                    };
+                    await request.get('http://' + SERVER + ':5000/linemsg/').then((msg) => {
+                        console.log(msg);
+                        reply(reply_token, msg);
+                    });
 
-                    reply(reply_token, JSON.stringify(msg, null, 4));
                 }
                 else {
                     let msg = event.message.text;
                     reply(reply_token, msg);
                 }
-            }break;
+            } break;
 
             case 'beacon': {
 
-                let msg;
-                if (event.beacon.type === 'enter') {
-                    p_in++;
+                let status;
 
-                    if (p_in > p_out + 2) {
-                        msg = "จํานวนคนเกิน กรุณาเชิญคนออกจากบริเวณ!!!";
-                        reply(reply_token, msg);
-                    }
-                    else
-                        reply(reply_token, "@Beacon Enter");
+
+                if (event.beacon.type === 'enter') {
+
+                    status = 'enter';
+                    await request.get('http://' + SERVER + ':5000/linemsg/').then((result) => {
+                        let p_in = result.p_in;
+                        let p_out = result.p_out;
+
+                        if (p_in > p_out + 2) {
+                            msg = "จํานวนคนเกิน กรุณาเชิญคนออกจากบริเวณ!!!";
+                            reply(reply_token, msg);
+                        }
+                        else
+                            reply(reply_token, "@Beacon Enter");
+
+                    });
                 }
 
                 else if (event.beacon.type === 'leave') {
-                    p_out++;
+                    status = 'leave';
                     reply(reply_token, "@Beacon Leave");
                 }
 
                 let timestamp = Date.now();
                 let data = {
-                    'p_in': p_in,
-                    'p_out': p_out,
-                    'timestamp': timestamp,
+                    'beacon': {
+                        'datetime': timestamp,
+                        'status': status,
+                    }
                 };
-                db.receiveDataBeacon(data);
+
+                request.post({
+                    url: 'http://' + SERVER + ':5000/receiveDataBeacon',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data),
+                }, (err, res, body) => {
+                    console.log(body);
+                })
 
             };
         };
     };
-
-    //console.log('get in?')
-    //console.log('incoming: '+msg)
-    //console.log(req.body)
-})
+});
 
 let push = (msg) => {
     let body = JSON.stringify({ //change into json string
@@ -114,7 +118,7 @@ let push = (msg) => {
                 text: msg
             }
         ]
-    })
+    }, null, 4)
     // curl
     curl('push', body)
 }

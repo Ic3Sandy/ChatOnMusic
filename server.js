@@ -2,13 +2,16 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const db = require('./db');
-require('./line');
+// require('./line');
 
 const app = express();
 const port = process.env.PORT || 5000;
 
 app.use(bodyParser.json());
 app.set('json spaces', 10);
+
+let p_in = 0;
+let p_out = 0;
 
 app.get('/', (req, res) => {
 
@@ -26,10 +29,10 @@ app.post('/receiveData', async (req, res) => {
 
     // console.log(req.body);
     if (!('DevEUI_uplink' in req.body)) {
-        res.json({'status': 'Not Found DevEUI_uplink'});
+        res.json({ 'status': 'Not Found DevEUI_uplink' });
     };
     if (!('payload_parsed' in req.body.DevEUI_uplink)) {
-        res.json({'status': 'Not Found payload_parsed'});
+        res.json({ 'status': 'Not Found payload_parsed' });
     };
 
     // { channel: 1,
@@ -66,62 +69,51 @@ app.post('/receiveData', async (req, res) => {
     console.log(data);
 
     if (temperature === null || humidity === null) {
-        res.json({'status': 'Not Found temperature or humidity'});
+        res.json({ 'status': 'Not Found temperature or humidity' });
     }
     else {
         db.receiveDataSensor(data);
-        let status = {'status': 'Success receiveData!'};
+        let status = { 'status': 'Success receiveDataSensor!' };
         res.json(status);
     };
 });
 
-app.get('/showData', async (req, res) => {
+app.get('/linemsg', async (req, res) => {
 
-    let data = await db.showData();
-
-    res.json(data);
-
-});
-
-app.post('/addData', (req, res) => {
-
-    let temp = req.body;
-    let data = {
-        'teamID': temp.teamID,
-        'temp': temp.temp,
-    }
-    db.receiveData(data);
-
-    let status = {'status': 'success'};
-    res.json(status);
-
-});
-
-app.put('/editData/:teamID', (req, res) => {
-
-    let temp = req.body;
-    let data = {
-        'teamID': req.params.teamID,
-        'temp': temp.temp,
+    let data = await db.lineMessaging();
+    let info = data[data.length - 1];
+    let msg = {
+        'Temperature': info.temperature,
+        'Humidity': info.temperature,
+        'P in': info.p_in,
+        'P out': info.p_out,
+        'Timestamp': info.timestamp,
     };
-    db.editData(data);
 
-    let status = {'status': 'success'};
-    res.json(status);
+    res.json(msg);
 
 });
 
-app.delete('/deleteData/:teamID', (req, res) => {
+app.post('/receiveDataBeacon', (req, res) => {
+
+    console.log(req.body);
+    let beacon = req.body.beacon;
+
+    if (beacon.status === 'enter') p_in++;
+    else if (beacon.status === 'leave') p_out++;
 
     let data = {
-        'teamID': req.params.teamID,
+        'p_in': p_in,
+        'p_out': p_out,
+        'timestamp': beacon.datetime,
     };
-    db.deleteData(data);
 
-    let status = {'status': 'success'};
+    db.receiveDataBeacon(data);
+    let status = { 'status': 'Success receiveDataBeacon!' };
     res.json(status);
 
 });
+
 
 app.listen(port, () => {
     console.log(`Server start on port ${port}!`);
