@@ -6,12 +6,14 @@ const db = require('./db');
 
 const app = express();
 const port = process.env.PORT || 5000;
+const schedule = require('node-schedule');
 
 app.use(bodyParser.json());
-app.set('json spaces', 10);
+app.set('json spaces', 4);
 
 let p_in = 0;
 let p_out = 0;
+let value = [];
 
 app.get('/', (req, res) => {
 
@@ -99,13 +101,13 @@ app.get('/lineMsg', async (req, res) => {
             'Timestamp': info.timestamp,
         };
 
-    }
+    };
 
     res.json(msg);
 
 });
 
-app.post('/receiveDataBeacon', (req, res) => {
+app.post('/putSanam', (req, res) => {
 
     console.log(req.body);
     let beacon = req.body.beacon;
@@ -119,17 +121,17 @@ app.post('/receiveDataBeacon', (req, res) => {
         'timestamp': beacon.datetime,
     };
 
-    db.receiveDataBeacon(data);
+    db.putSanam(data);
     let status = { 'status': 'Success receiveDataBeacon!' };
     res.json(status);
 
 });
 
-app.get('/receiveDataBeacon', async (req, res) => {
+app.get('/checkPerson', async (req, res) => {
 
-    let data = await db.lineBeacon();
+    let data = await db.checkPerson();
     let msg;
-    
+
     // console.log(data.length);
     if (data.length === 0) {
         msg = {
@@ -149,7 +151,87 @@ app.get('/receiveDataBeacon', async (req, res) => {
 
 });
 
+app.get('/getSanam', async (req, res) => {
+
+    if (!('hours' in req.query)) {
+        res.json({ 'status': 'Not Found hours in parameter' });
+    };
+
+    let hours = parseInt(req.query.hours);
+    let data = await db.readSanam();
+    let arrayValue = [];
+
+    if (data.length !== 0) {
+        for (let i in data) {
+            arrayValue = arrayValue.concat(data[i].value);
+        };
+    };
+
+    let result = {
+        'number_of_tourist': arrayValue
+    };
+
+    res.json(result);
+
+});
+
+app.get('/predict', async (req, res) => {
+
+    let msg = "This a predict from model";
+
+    res.json(msg);
+
+});
 
 app.listen(port, () => {
+
     console.log(`Server start on port ${port}!`);
+    schedule.scheduleJob('0,10,20,30,40,50 * * * * *', async () => {
+
+        let timeNow = (new Date().toISOString().replace(/T/, ' ').replace(/\..+/, ''));
+        console.log('Schedule: ' + timeNow);
+
+        // 24.00 thai
+        if (timeNow.split(' ')[1] === '17:00:00') {
+
+            let data = {
+                'p_in': 0,
+                'p_out': 0,
+                'timestamp': timeNow,
+            };
+            db.putSanam(data);
+
+            data = {
+                'day': timeNow.split(' ')[0],
+                'value': [0],
+            };
+            db.addNewDay(data);
+
+            value = [];
+
+        };
+
+        let data = await db.checkPerson();
+        if (data.length !== 0) {
+
+            let info = data[data.length - 1];
+            let numPerson = info.p_in - info.p_out;
+            if (numPerson > 0)
+                value.push(numPerson);
+            else
+                value.push(0)
+
+        }
+        else {
+            value.push(0);
+        }
+
+        data = {
+            'day': timeNow.split(' ')[0],
+            'value': value,
+        };
+
+        db.updateSanam(data);
+
+    });
 });

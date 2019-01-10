@@ -67,7 +67,7 @@ app.post('/webhook', async (req, res) => {
                 if (event.beacon.type === 'enter') {
 
                     status = 'enter';
-                    await request.get('http://' + SERVER + ':5000/receiveDataBeacon/').then((result) => {
+                    await request.get('http://' + SERVER + ':5000/checkPerson/').then((result) => {
                         
                         result = JSON.parse(result);
                         let p_in = result.p_in;
@@ -97,7 +97,7 @@ app.post('/webhook', async (req, res) => {
                 };
 
                 request.post({
-                    url: 'http://' + SERVER + ':5000/receiveDataBeacon',
+                    url: 'http://' + SERVER + ':5000/putSanam',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data),
                 }, (err, res, body) => {

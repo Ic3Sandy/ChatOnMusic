@@ -24,8 +24,14 @@ let schemaBeacon = new mongoose.Schema({
     'timestamp': Date,
 });
 
+let schemaSanam = new mongoose.Schema({
+    'day': Date,
+    'value': [Number],
+});
+
 let SensorData = mongoose.model('SensorData', schemaSensor);
 let BeaconData = mongoose.model('BeaconData', schemaBeacon);
+let SanamData = mongoose.model('SanamData', schemaSanam);
 
 let receiveDataSensor = (data) => {
 
@@ -44,7 +50,7 @@ let receiveDataSensor = (data) => {
 
 };
 
-let receiveDataBeacon = (data) => {
+let putSanam = (data) => {
 
     let result = new BeaconData({
         'p_in': data.p_in,
@@ -59,6 +65,34 @@ let receiveDataBeacon = (data) => {
 
 };
 
+let addNewDay = (data) => {
+
+    let result = new SanamData({
+        'day': data.day,
+        'value': data.value,
+    });
+
+    result.save((err, res) => {
+        if (err) return console.error(err);
+        else console.log(res)
+    });
+
+};
+
+let updateSanam = (data) => {
+
+    SanamData.updateOne({ 'day': data.day }, { 'value': data.value }, (err, res) => {
+        if (err) return console.error(err);
+        else {
+            console.log(res);
+            if (res.n === 0) {
+                addNewDay(data);
+            }
+        };
+    });
+
+};
+
 let lineMessaging = async () => {
 
     return SensorData.find({}, (err, data) => {
@@ -69,9 +103,19 @@ let lineMessaging = async () => {
 
 };
 
-let lineBeacon = async () => {
+let checkPerson = async () => {
 
     return BeaconData.find({}, (err, data) => {
+        if (err) return console.error(err);
+        // else console.log(data);
+        return data;
+    });
+
+};
+
+let readSanam = async () => {
+
+    return SanamData.find({}, (err, data) => {
         if (err) return console.error(err);
         // else console.log(data);
         return data;
@@ -108,9 +152,12 @@ let deleteData = (data) => {
 
 
 module.exports.receiveDataSensor = receiveDataSensor;
-module.exports.receiveDataBeacon = receiveDataBeacon;
+module.exports.putSanam = putSanam;
 module.exports.lineMessaging = lineMessaging;
-module.exports.lineBeacon = lineBeacon;
+module.exports.checkPerson = checkPerson;
+module.exports.addNewDay = addNewDay;
+module.exports.updateSanam = updateSanam;
+module.exports.readSanam = readSanam;
 
 
 // let result = new Temp({ 'teamID': 11, 'temp': '23.6' });
