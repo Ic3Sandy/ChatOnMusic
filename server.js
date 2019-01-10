@@ -2,6 +2,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const db = require('./db');
+require('./line');
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -21,26 +22,57 @@ app.get('/', (req, res) => {
 
 });
 
-app.post('/receiveData', (req, res) => {
+app.post('/receiveData', async (req, res) => {
+
+    // console.log(req.body);
+    if (!('DevEUI_uplink' in req.body)) {
+        res.json({'status': 'Not Found DevEUI_uplink'});
+    };
+    if (!('payload_parsed' in req.body.DevEUI_uplink)) {
+        res.json({'status': 'Not Found payload_parsed'});
+    };
 
     // { channel: 1,
     //     type: 103,
     //     typeString: 'Temperature Sensor',
     //     value: 27.5 }
-    console.log(req.body);
-    let temp = req.body.DevEUI_uplink.payload_parsed.frames[0];
-    let DevEUI = req.body.DevEUI_uplink.payload_parsed.frames[1];
-    // let DevEUI = 'AA00DBCA12EF1111';
-    // let temp = req.body;
-    let data = {
-        'teamID': DevEUI.value,
-        'temp': (temp.value).toString(),
-    }
-    
-    db.receiveData(data);
-    let status = {'status': 'success'};
-    res.json(status);
+    let frames = req.body.DevEUI_uplink.payload_parsed.frames;
+    // console.log(frames);
 
+    let temperature = null;
+    let humidity = null;
+    let p_in = 1;
+    let p_out = 1;
+    let timestamp = Date.now();
+
+    for (let i in frames) {
+        // Temperature Sensor
+        if (frames[i].type === 103) {
+            temperature = frames[i].value;
+        }
+        // Humidity Sensor
+        else if (frames[i].type === 104) {
+            humidity = frames[i].value;
+        };
+    };
+
+    let data = {
+        'temperature': temperature,
+        'humidity': humidity,
+        'p_in': p_in,
+        'p_out': p_out,
+        'timestamp': timestamp,
+    };
+    console.log(data);
+
+    if (temperature === null || humidity === null) {
+        res.json({'status': 'Not Found temperature or humidity'});
+    }
+    else {
+        db.receiveDataSensor(data);
+        let status = {'status': 'Success receiveData!'};
+        res.json(status);
+    };
 });
 
 app.get('/showData', async (req, res) => {
