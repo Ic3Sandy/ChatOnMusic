@@ -69,6 +69,16 @@ let lineMessaging = async () => {
 
 };
 
+let lineBeacon = async () => {
+
+    return BeaconData.find({}, (err, data) => {
+        if (err) return console.error(err);
+        // else console.log(data);
+        return data;
+    });
+
+};
+
 let showData = async () => {
 
     return SensorData.find({}, (err, data) => {
@@ -99,11 +109,9 @@ let deleteData = (data) => {
 
 module.exports.receiveDataSensor = receiveDataSensor;
 module.exports.receiveDataBeacon = receiveDataBeacon;
-
-module.exports.showData = showData;
-module.exports.editData = editData;
-module.exports.deleteData = deleteData;
 module.exports.lineMessaging = lineMessaging;
+module.exports.lineBeacon = lineBeacon;
+
 
 // let result = new Temp({ 'teamID': 11, 'temp': '23.6' });
 

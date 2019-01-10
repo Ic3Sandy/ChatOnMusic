@@ -64,11 +64,12 @@ app.post('/webhook', async (req, res) => {
 
                 let status;
 
-
                 if (event.beacon.type === 'enter') {
 
                     status = 'enter';
-                    await request.get('http://' + SERVER + ':5000/linemsg/').then((result) => {
+                    await request.get('http://' + SERVER + ':5000/receiveDataBeacon/').then((result) => {
+                        
+                        result = JSON.parse(result);
                         let p_in = result.p_in;
                         let p_out = result.p_out;
 

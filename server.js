@@ -78,17 +78,28 @@ app.post('/receiveData', async (req, res) => {
     };
 });
 
-app.get('/linemsg', async (req, res) => {
+app.get('/lineMsg', async (req, res) => {
 
     let data = await db.lineMessaging();
-    let info = data[data.length - 1];
-    let msg = {
-        'Temperature': info.temperature,
-        'Humidity': info.temperature,
-        'P in': info.p_in,
-        'P out': info.p_out,
-        'Timestamp': info.timestamp,
-    };
+    let msg;
+
+    if (data.length === 0) {
+        msg = {
+            "Status": "Not exist Data"
+        };
+    }
+    else {
+
+        let info = data[data.length - 1];
+        msg = {
+            'Temperature': info.temperature,
+            'Humidity': info.temperature,
+            'p_in': info.p_in,
+            'p_out': info.p_out,
+            'Timestamp': info.timestamp,
+        };
+
+    }
 
     res.json(msg);
 
@@ -111,6 +122,30 @@ app.post('/receiveDataBeacon', (req, res) => {
     db.receiveDataBeacon(data);
     let status = { 'status': 'Success receiveDataBeacon!' };
     res.json(status);
+
+});
+
+app.get('/receiveDataBeacon', async (req, res) => {
+
+    let data = await db.lineBeacon();
+    let msg;
+    
+    // console.log(data.length);
+    if (data.length === 0) {
+        msg = {
+            p_in: 0,
+            p_out: 0,
+        };
+    }
+    else {
+        let info = data[data.length - 1];
+        msg = {
+            p_in: info.p_in,
+            p_out: info.p_out,
+        };
+    }
+
+    res.json(msg);
 
 });
 
