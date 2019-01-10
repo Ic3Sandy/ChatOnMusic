@@ -2,7 +2,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const db = require('./db');
-// require('./line');
+const readCSV = require('./readCSV');
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -58,7 +58,15 @@ app.post('/receiveData', async (req, res) => {
         // Humidity Sensor
         else if (frames[i].type === 104) {
             humidity = frames[i].value;
-        };
+        }
+        //p_in
+        else if (frames[i].channel === 9) {
+            p_in = frames[i].value;
+        }
+        //p_out
+        else if (frames[i].channel === 10) {
+            p_out = frames[i].value;
+        }
     };
 
     let data = {
@@ -75,7 +83,7 @@ app.post('/receiveData', async (req, res) => {
     }
     else {
         db.receiveDataSensor(data);
-        let status = { 'status': 'Success receiveDataSensor!' };
+        let status = { 'status': 'Success receiveDataFromSensor!' };
         res.json(status);
     };
 });
@@ -122,7 +130,7 @@ app.post('/putSanam', (req, res) => {
     };
 
     db.putSanam(data);
-    let status = { 'status': 'Success receiveDataBeacon!' };
+    let status = { 'status': 'Success receiveDataFromBeacon!' };
     res.json(status);
 
 });
@@ -167,11 +175,27 @@ app.get('/getSanam', async (req, res) => {
         };
     };
 
-    let result = {
-        'number_of_tourist': arrayValue
-    };
+    let list = await readCSV.readSanamCSV();
+    arrayValue = (list.concat(arrayValue)).reverse();
 
-    res.json(result);
+    if (hours > arrayValue.length) {
+        res.json({ 'status': 'Hours more then Value' });
+    }
+    else {
+
+        let numberOfTourist = [];
+
+        for (let i = 0; i < hours; i++) {
+            numberOfTourist.push(arrayValue[i])
+        };
+
+        let result = {
+            'number_of_tourist': numberOfTourist.reverse()
+        };
+    
+        res.json(result);
+
+    }
 
 });
 
@@ -186,7 +210,7 @@ app.get('/predict', async (req, res) => {
 app.listen(port, () => {
 
     console.log(`Server start on port ${port}!`);
-    schedule.scheduleJob('0,10,20,30,40,50 * * * * *', async () => {
+    schedule.scheduleJob('0 * * * *', async () => {
 
         let timeNow = (new Date().toISOString().replace(/T/, ' ').replace(/\..+/, ''));
         console.log('Schedule: ' + timeNow);

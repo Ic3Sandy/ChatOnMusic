@@ -26,7 +26,7 @@ let schemaBeacon = new mongoose.Schema({
 
 let schemaSanam = new mongoose.Schema({
     'day': Date,
-    'value': [Number],
+    'value': [String],
 });
 
 let SensorData = mongoose.model('SensorData', schemaSensor);
