@@ -88,7 +88,7 @@ app.post('/webhook', async (req, res) => {
                     reply(reply_token, "@Beacon Leave");
                 }
 
-                let timestamp = Date.now();
+                let timestamp = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
                 let data = {
                     'beacon': {
                         'datetime': timestamp,

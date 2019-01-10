@@ -46,7 +46,7 @@ app.post('/receiveData', async (req, res) => {
     let humidity = null;
     let p_in = 987654321;
     let p_out = 987654321;
-    let timestamp = Date.now();
+    let timestamp = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
 
     for (let i in frames) {
         // Temperature Sensor
