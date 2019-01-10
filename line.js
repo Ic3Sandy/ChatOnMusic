@@ -14,6 +14,9 @@ const HEADERS = {
 app.use(bodyParser.urlencoded({ extended: false }))//initiate body parser to get json
 app.use(bodyParser.json())
 
+let p_in = 0;
+let p_out = 0;
+
 // Push
 //get method
 app.get('/webhook', (req, res) => {
@@ -40,6 +43,7 @@ app.post('/webhook', async (req, res) => {
 
     else if (event) {
         switch (event.type) {
+
             case 'message': {
                 if (event.message.type === 'sticker') {
                     reply(reply_token, 'sticker')
@@ -59,20 +63,41 @@ app.post('/webhook', async (req, res) => {
                     reply(reply_token, JSON.stringify(msg, null, 4));
                 }
                 else {
-                    let msg = event.message.text
-                    reply(reply_token, msg)
+                    let msg = event.message.text;
+                    reply(reply_token, msg);
                 }
-            }
-                break;
+            }break;
+
             case 'beacon': {
-                let msg = event
-                reply(reply_token, JSON.stringify(msg, null, 4))
-            }
 
+                let msg;
+                if (event.beacon.type === 'enter') {
+                    p_in++;
 
-        }
+                    if (p_in > p_out + 2) {
+                        msg = "จํานวนคนเกิน กรุณาเชิญคนออกจากบริเวณ!!!";
+                        reply(reply_token, msg);
+                    }
+                    else
+                        reply(reply_token, "@Beacon Enter");
+                }
 
-    }
+                else if (event.beacon.type === 'leave') {
+                    p_out++;
+                    reply(reply_token, "@Beacon Leave");
+                }
+
+                let timestamp = Date.now();
+                let data = {
+                    'p_in': p_in,
+                    'p_out': p_out,
+                    'timestamp': timestamp,
+                };
+                db.receiveDataBeacon(data);
+
+            };
+        };
+    };
 
     //console.log('get in?')
     //console.log('incoming: '+msg)

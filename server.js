@@ -41,8 +41,8 @@ app.post('/receiveData', async (req, res) => {
 
     let temperature = null;
     let humidity = null;
-    let p_in = 1;
-    let p_out = 1;
+    let p_in = 987654321;
+    let p_out = 987654321;
     let timestamp = Date.now();
 
     for (let i in frames) {
