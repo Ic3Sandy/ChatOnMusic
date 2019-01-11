@@ -195,7 +195,7 @@ app.get('/getSanam', async (req, res) => {
         let result = {
             'number_of_tourist': numberOfTourist.reverse()
         };
-    
+
         res.json(result);
 
     }
@@ -217,9 +217,9 @@ app.get('/predict', async (req, res) => {
 
     model.predict(testXS).data().then((predict) => {
 
-        let h1 = (parseInt(predict[0]*MAX)).toString();
-        let h2 = (parseInt(predict[1]*MAX)).toString();
-        let h3 = (parseInt(predict[2]*MAX)).toString();
+        let h1 = (parseInt(predict[0] * MAX)).toString();
+        let h2 = (parseInt(predict[1] * MAX)).toString();
+        let h3 = (parseInt(predict[2] * MAX)).toString();
         // console.log(h1, h2, h3);
 
         let result = {
@@ -229,7 +229,60 @@ app.get('/predict', async (req, res) => {
         tf.disposeVariables();
         res.json(result);
     });
-    
+
+});
+
+app.get('/predict1', async (req, res) => {
+
+    request.get('http://' + SERVER + ':5000/getSanam?hours=6').then(async (msg) => {
+
+        msg = JSON.parse(msg);
+        console.log(msg.number_of_tourist.length);
+        let numberOfTourist = msg.number_of_tourist;
+        let length = (numberOfTourist.length) / 6;
+
+        if (length < 0) {
+            res.json({ 'status': 'Length must morn then 6' });
+        }
+
+        else {
+
+            let xtest = []
+
+            // for (let i = 0; i < length; i++) {
+
+                let n1 = parseInt(numberOfTourist[i]);
+                let n2 = parseInt(numberOfTourist[i + 1]);
+                let n3 = parseInt(numberOfTourist[i + 2]);
+                let n4 = parseInt(numberOfTourist[i + 3]);
+                let n5 = parseInt(numberOfTourist[i + 4]);
+                let n6 = parseInt(numberOfTourist[i + 5]);
+
+                xtest.push([n1, n2, n3, n4, n5, n6]);
+            // }
+
+            let model = await tf.loadModel('file://model1/model.json');
+            let testXS = tf.tensor2d(xtest);
+            let MAX = 1800
+
+            model.predict(testXS).data().then((predict) => {
+
+                let h1 = (parseInt(predict[0] * MAX)).toString();
+                let h2 = (parseInt(predict[1] * MAX)).toString();
+                let h3 = (parseInt(predict[2] * MAX)).toString();
+                // console.log(h1, h2, h3);
+
+                let result = {
+                    "number_of_tourist": [h1, h2, h3]
+                };
+
+                tf.disposeVariables();
+                res.json(result);
+            });
+
+        }
+
+    });
 
 });
 
